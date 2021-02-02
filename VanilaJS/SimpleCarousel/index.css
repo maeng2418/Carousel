@@ -31,7 +31,6 @@
 
 .carousel-slide {
   display: flex;
-  flex-wrap: nowrap;
   height: 100%;
 }
 

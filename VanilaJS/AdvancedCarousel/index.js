@@ -9,20 +9,11 @@ const next = document.querySelector('#next');
 // 터치시 드래그 길이
 const threshold = 100;
 
-const slideWidth = carouselContainer.offsetWidth;
-const slideHeight = carouselContainer.offsetHeight;
+const slideWidth = carouselImages[0].clientWidth;
 const slidesLength = carouselImages.length;
 
-carouselImages.forEach(img => {
-  img.style.width = `${slideWidth}px`;
-  img.style.height = `${slideHeight}px`;
-});
-
-// 앞뒤로 첫 이미지와 마지막 이미지 길이까지 계산해서 더함.
-carouselSlide.style.width = `${(slidesLength + 4) * slideWidth}px`;
-
 // 첫번째 이미지가 나타나도록 함. (지금 맨처음꺼에 lastClone이 있고 마지막에 firstClone이 있으므로)
-carouselSlide.style.left = `-${slideWidth}px`;
+carouselSlide.style.transform = `translateX(${-slideWidth}px)`;
 
 let posX1 = 0;
 let posX2 = 0;
@@ -39,16 +30,16 @@ carouselSlide.appendChild(cloneFirst);
 carouselSlide.insertBefore(cloneLast, firstSlide);
 
 let index = 0;
-let allowShift = true;
+let allowShift = true; // 벗어나는 거 막음 (안전코드) - 트랜지션이 끝나면 다음 클릭 가능
+let offsetLeft;
 
 const dragStart = (e) => {
   e = e || window.event;
   e.preventDefault();
-  posInitial = carouselSlide.offsetLeft;
-  
+  posInitial = (-slideWidth*(index+1));
+  offsetLeft = posInitial;
   if (e.type == 'touchstart') {
     posX1 = e.touches[0].clientX;
-    console.log(posX1);
   } else {
     posX1 = e.clientX;
     document.onmouseup = dragEnd;
@@ -58,7 +49,6 @@ const dragStart = (e) => {
 
 const dragAction = (e) => {
   e = e || window.event;
-  
   if (e.type == 'touchmove') {
     posX2 = posX1 - e.touches[0].clientX;
     posX1 = e.touches[0].clientX;
@@ -66,17 +56,18 @@ const dragAction = (e) => {
     posX2 = posX1 - e.clientX;
     posX1 = e.clientX;
   }
-  carouselSlide.style.left = (carouselSlide.offsetLeft - posX2) + "px";
+  offsetLeft -= posX2;
+  carouselSlide.style.transform = "translateX("+(offsetLeft) + "px)";
 }
     
 const dragEnd = (e) => {
-  posFinal = carouselSlide.offsetLeft;
+  posFinal = offsetLeft;
   if (posFinal - posInitial < -threshold) {
     shiftSlide(1, 'drag');
   } else if (posFinal - posInitial > threshold) {
     shiftSlide(-1, 'drag');
   } else {
-    carouselSlide.style.left = (posInitial) + "px";
+    carouselSlide.style.transform = "translateX(" + (posInitial) + "px)";
   }
   document.onmouseup = null;
   document.onmousemove = null;
@@ -85,13 +76,15 @@ const dragEnd = (e) => {
 const shiftSlide = (dir, action) => {
   carouselSlide.classList.add('shifting');
   
-  if (allowShift) {
-    if (!action) { posInitial = carouselSlide.offsetLeft; }
+  if (allowShift) { // 벗어나는 거 막음 (안전코드) - 트랜지션이 끝나면 다음 클릭 가능
+    if (!action) { posInitial = (-slideWidth*(index+1)); }
+    // next
     if (dir == 1) {
-      carouselSlide.style.left = (posInitial - slideWidth) + "px";
-      index++;      
+      carouselSlide.style.transform = "translateX(" + (posInitial - slideWidth) + "px)";
+      index++;   
+    // prev   
     } else if (dir == -1) {
-      carouselSlide.style.left = (posInitial + slideWidth) + "px";
+      carouselSlide.style.transform = "translateX(" + (posInitial + slideWidth) + "px)";
       index--;      
     }
   };
@@ -102,15 +95,15 @@ const shiftSlide = (dir, action) => {
 const checkIndex = () => {
   carouselSlide.classList.remove('shifting');
   if (index == -1) {
-    carouselSlide.style.left = -(slidesLength * slideWidth) + "px";
+    carouselSlide.style.transform = "translateX(" + (-(slidesLength * slideWidth)) + "px)";
     index = slidesLength - 1;
   }
   if (index == slidesLength) {
-    carouselSlide.style.left = -(1 * slideWidth) + "px";
+    carouselSlide.style.transform = "translateX(" + (-(1 * slideWidth)) + "px)";
     index = 0;
   }
   
-  allowShift = true;
+  allowShift = true; // 벗어나는거 막음 (안전코드)
 }
 
 // Mouse events
@@ -118,8 +111,9 @@ carouselSlide.onmousedown = dragStart;
 
 // Touch events
 carouselSlide.addEventListener('touchstart', dragStart);
-carouselSlide.addEventListener('touchend', dragEnd);
 carouselSlide.addEventListener('touchmove', dragAction);
+carouselSlide.addEventListener('touchend', dragEnd);
+
 
 // Click events
 prev.addEventListener('click', (e) => shiftSlide(-1));

@@ -14,21 +14,24 @@
 
 .carousel-slide {
   display: flex;
+  height: 100%;
   position: relative;
 }
 
 .carousel-slide.shifting {
-  transition: left .2s ease-out;
+  transition: transform .2s ease-out;
 }
 
 .img {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
   text-align: center;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
   justify-content: center;
+  align-items: center;
   transition: all 1s;
-  position: relative;
   background: #FFCF47;
   border-radius: 2px;
 }
